@@ -9,13 +9,13 @@ using namespace std;
 using namespace boost::property_tree;
 std::string GetTokenString();
 std::string getPostToken();
-string SendPostData(char *filename);
+int SendPostData(char *filename);
 int main() {
     std::cout << "Hello, World!" << std::endl;
-    string n =SendPostData("/tmp/post2.html");
+    int n =SendPostData("/tmp/post2.html");
 //    SendPostData{"/tmp/post2.html"};
-    cout<< n.c_str()<<endl;
-    cout<< n.c_str()<<endl;
+    cout<< n<<endl;
+    cout<< n<<endl;
     return 0;
 }
 
@@ -113,7 +113,7 @@ string GetTokenString(){
     return n;
 }
 
-string SendPostData(char *filename)
+int SendPostData(char *filename)
 {
     cout<<"#######################postdata = "<<filename;
     CURL *curl;
@@ -156,5 +156,19 @@ string SendPostData(char *filename)
 
         curl_easy_cleanup(curl);
     }
-    return s_post_return;
+
+
+    istringstream iss;
+
+//    getPostToken();
+//    std::cout << " s_post_return = "<<getPostToken() <<std::endl;
+
+    iss.str(s_post_return);
+
+    ptree item;
+    read_json(iss,item);
+
+    int n = item.get<int>("code");
+    return n;
+
 }
