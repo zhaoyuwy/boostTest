@@ -7,58 +7,15 @@
 
 using namespace std;
 using namespace boost::property_tree;
-
+std::string GetTokenString();
 std::string getPostToken();
+string SendPostData(char *filename);
 int main() {
     std::cout << "Hello, World!" << std::endl;
-
-    std::string s_post_return;
-//    getPostToken();
-    std::cout << " s_post_return = "<<getPostToken() <<std::endl;
-
-    s_post_return = getPostToken();
-
-//    std::string str_head;
-//    string str_node_val;
-//
-//    ptree pt,pt1,pt2;
-//    stringstream stream;
-//
-//    stream<< s_post_return;
-//
-//    try {
-//        read_json<ptree>(stream,pt);
-//
-//        for(ptree::iterator ita = pt.begin();ita !=pt.end();++ita)
-//        {
-//            cout<<"first:"<<ita->first<<endl;
-//
-//            str_node_val=pt.get<string>(ita->first);
-//            cout<<str_node_val<<endl;
-//
-//            string key = ita->first;
-//            string token_post_data = ita->second.get<string>("access_token");
-//
-//            cout<<"token_post_data "<< token_post_data<<endl;
-//
-//        }
-//    }
-//    catch (std::runtime_error& error){
-//        std::cout<<"error = "<< error.what()<<endl;
-//    }
-
-//    string c;
-    istringstream iss;
-    iss.str(s_post_return);
-
-    ptree item;
-    read_json(iss,item);
-
-    string n = item.get<string>("access_token");
-    cout << "n = " <<n<<endl;
-
-
-//    Json::Reader reader;
+    string n =SendPostData("/tmp/post2.html");
+//    SendPostData{"/tmp/post2.html"};
+    cout<< n.c_str()<<endl;
+    cout<< n.c_str()<<endl;
     return 0;
 }
 
@@ -122,7 +79,7 @@ std::string getPostToken()
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
         res = curl_easy_setopt(curl,CURLOPT_WRITEDATA,&s_post_return);
 //        std::cout << "res CURLOPT_WRITEDATA =" <<res<< std::endl;
-        curl_easy_setopt (curl, CURLOPT_VERBOSE, 1L); //remove this to disable verbose output
+//        curl_easy_setopt (curl, CURLOPT_VERBOSE, 1L); //remove this to disable verbose output
 
 
 
@@ -135,4 +92,69 @@ std::string getPostToken()
 //    fclose(fp);
     return s_post_return;
 
+}
+
+
+string GetTokenString(){
+    istringstream iss;
+
+    std::string s_post_return;
+//    getPostToken();
+//    std::cout << " s_post_return = "<<getPostToken() <<std::endl;
+
+    s_post_return = getPostToken();
+    iss.str(s_post_return);
+
+    ptree item;
+    read_json(iss,item);
+
+    string n = item.get<string>("access_token");
+//    cout << "n = " <<n<<endl;
+    return n;
+}
+
+string SendPostData(char *filename)
+{
+    cout<<"#######################postdata = "<<filename;
+    CURL *curl;
+    CURLcode res;
+
+    struct curl_slist *headers = NULL;
+    string tokenstring ="Authorization:Bearer "+GetTokenString();
+    cout<<"get token ok and tokenstring is =" << tokenstring<<endl;
+    headers = curl_slist_append(headers, tokenstring.c_str());
+    headers = curl_slist_append(headers, "user_name:c00000000");
+    headers = curl_slist_append(headers, "service_name:pntl");
+    headers = curl_slist_append(headers, "Content-Type:application/json");
+
+    curl = curl_easy_init();
+    std::string s_post_return;
+
+//        FILE *fp;
+//    if((fp =fopen(filename,"w"))==NULL)
+//    {
+//        return false;
+//    }
+    if(curl)
+    {
+
+        res= curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+//        res= curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        res = curl_easy_setopt(curl,CURLOPT_POSTFIELDS,"{\"test\":\"11233\"}");
+
+        res= curl_easy_setopt(curl,CURLOPT_URL,"https://cas.lf.hwclouds.com:8243/Kafka/v1/mq/pntl");
+        res= curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER,0);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, CurlWrite_CallbackFunc_StdString);
+        res = curl_easy_setopt(curl,CURLOPT_WRITEDATA,&s_post_return);
+//        res = curl_easy_setopt(curl,CURLOPT_WRITEDATA,fp);
+        curl_easy_setopt (curl, CURLOPT_VERBOSE, 1L); //remove this to disable verbose output
+
+
+        res = curl_easy_perform(curl);
+
+        cout<<"curl_easy_perform rst ="<<res<<endl;
+
+        curl_easy_cleanup(curl);
+    }
+    return s_post_return;
 }
